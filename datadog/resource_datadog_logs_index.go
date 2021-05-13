@@ -119,7 +119,7 @@ func resourceDatadogLogsIndexRead(d *schema.ResourceData, meta interface{}) erro
 			d.SetId("")
 			return nil
 		}
-		return utils.TranslateClientError(err, "error getting logs index")
+		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error getting logs index")
 	}
 	return updateLogsIndexState(d, &ddIndex)
 }
@@ -139,7 +139,7 @@ func resourceDatadogLogsIndexUpdate(d *schema.ResourceData, meta interface{}) er
 		if strings.Contains(err.Error(), "404 Not Found") {
 			return fmt.Errorf("logs index creation is not allowed, index_name: %s", tfName)
 		}
-		return utils.TranslateClientError(err, "error updating logs index")
+		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error updating logs index")
 	}
 	d.SetId(tfName)
 	return updateLogsIndexState(d, &updatedIndex)

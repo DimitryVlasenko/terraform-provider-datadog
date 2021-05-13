@@ -371,7 +371,7 @@ func resourceDatadogLogsPipelineCreate(d *schema.ResourceData, meta interface{})
 	}
 	createdPipeline, _, err := datadogClientV1.LogsPipelinesApi.CreateLogsPipeline(authV1, *ddPipeline)
 	if err != nil {
-		return utils.TranslateClientError(err, "failed to create logs pipeline using Datadog API")
+		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "failed to create logs pipeline using Datadog API")
 	}
 	d.SetId(*createdPipeline.Id)
 	return updateLogsCustomPipelineState(d, &createdPipeline)
@@ -408,7 +408,7 @@ func resourceDatadogLogsPipelineRead(d *schema.ResourceData, meta interface{}) e
 			d.SetId("")
 			return nil
 		}
-		return utils.TranslateClientError(err, "failed to get logs pipeline using Datadog API")
+		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "failed to get logs pipeline using Datadog API")
 	}
 	return updateLogsCustomPipelineState(d, &ddPipeline)
 }
@@ -427,7 +427,7 @@ func resourceDatadogLogsPipelineUpdate(d *schema.ResourceData, meta interface{})
 	}
 	updatedPipeline, _, err := datadogClientV1.LogsPipelinesApi.UpdateLogsPipeline(authV1, d.Id(), *ddPipeline)
 	if err != nil {
-		return utils.TranslateClientError(err, "error updating logs pipeline")
+		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error updating logs pipeline")
 	}
 	return updateLogsCustomPipelineState(d, &updatedPipeline)
 }
@@ -445,7 +445,7 @@ func resourceDatadogLogsPipelineDelete(d *schema.ResourceData, meta interface{})
 		if strings.Contains(err.Error(), "400 Bad Request") {
 			return nil
 		}
-		return utils.TranslateClientError(err, "error deleting logs pipeline")
+		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error deleting logs pipeline")
 	}
 	return nil
 }

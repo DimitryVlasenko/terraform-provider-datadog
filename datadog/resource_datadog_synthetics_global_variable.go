@@ -110,7 +110,7 @@ func resourceDatadogSyntheticsGlobalVariableCreate(d *schema.ResourceData, meta 
 	createdSyntheticsGlobalVariable, _, err := datadogClientV1.SyntheticsApi.CreateGlobalVariable(authV1, *syntheticsGlobalVariable)
 	if err != nil {
 		// Note that Id won't be set, so no state will be saved.
-		return utils.TranslateClientError(err, "error creating synthetics global variable")
+		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error creating synthetics global variable")
 	}
 
 	// If the Create callback returns with or without an error without an ID set using SetId,
@@ -134,7 +134,7 @@ func resourceDatadogSyntheticsGlobalVariableRead(d *schema.ResourceData, meta in
 			d.SetId("")
 			return nil
 		}
-		return utils.TranslateClientError(err, "error getting synthetics global variable")
+		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error getting synthetics global variable")
 	}
 
 	return updateSyntheticsGlobalVariableLocalState(d, &syntheticsGlobalVariable)
@@ -148,7 +148,7 @@ func resourceDatadogSyntheticsGlobalVariableUpdate(d *schema.ResourceData, meta 
 	syntheticsGlobalVariable := buildSyntheticsGlobalVariableStruct(d)
 	if _, _, err := datadogClientV1.SyntheticsApi.EditGlobalVariable(authV1, d.Id(), *syntheticsGlobalVariable); err != nil {
 		// If the Update callback returns with or without an error, the full state is saved.
-		utils.TranslateClientError(err, "error updating synthetics global variable")
+		utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error updating synthetics global variable")
 	}
 
 	// Return the read function to ensure the state is reflected in the terraform.state file
@@ -162,7 +162,7 @@ func resourceDatadogSyntheticsGlobalVariableDelete(d *schema.ResourceData, meta 
 
 	if _, err := datadogClientV1.SyntheticsApi.DeleteGlobalVariable(authV1, d.Id()); err != nil {
 		// The resource is assumed to still exist, and all prior state is preserved.
-		return utils.TranslateClientError(err, "error deleting synthetics global variable")
+		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error deleting synthetics global variable")
 	}
 
 	// The resource is assumed to be destroyed, and all state is removed.

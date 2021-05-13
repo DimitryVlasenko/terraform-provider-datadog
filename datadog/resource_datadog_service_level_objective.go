@@ -190,7 +190,7 @@ func resourceDatadogServiceLevelObjectiveCustomizeDiff(diff *schema.ResourceDiff
 		for _, v := range attr.(*schema.Set).List() {
 			// Check that each monitor being added to the SLO exists
 			if _, _, err := datadogClientV1.MonitorsApi.GetMonitor(authV1, int64(v.(int))); err != nil {
-				return utils.TranslateClientError(err, "error finding monitor to add to SLO")
+				return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error finding monitor to add to SLO")
 			}
 		}
 	}
@@ -339,7 +339,7 @@ func resourceDatadogServiceLevelObjectiveCreate(d *schema.ResourceData, meta int
 	_, slor := buildServiceLevelObjectiveStructs(d)
 	sloResp, _, err := datadogClientV1.ServiceLevelObjectivesApi.CreateSLO(authV1, *slor)
 	if err != nil {
-		return utils.TranslateClientError(err, "error creating service level objective")
+		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error creating service level objective")
 	}
 
 	slo := &sloResp.GetData()[0]
@@ -359,7 +359,7 @@ func resourceDatadogServiceLevelObjectiveRead(d *schema.ResourceData, meta inter
 			d.SetId("")
 			return nil
 		}
-		return utils.TranslateClientError(err, "error getting service level objective")
+		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error getting service level objective")
 	}
 
 	return updateSLOStateFromRead(d, sloResp.Data)
@@ -500,7 +500,7 @@ func resourceDatadogServiceLevelObjectiveUpdate(d *schema.ResourceData, meta int
 
 	updatedSLO, _, err := datadogClientV1.ServiceLevelObjectivesApi.UpdateSLO(authV1, d.Id(), *slo)
 	if err != nil {
-		return utils.TranslateClientError(err, "error updating service level objective")
+		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error updating service level objective")
 	}
 
 	return updateSLOState(d, &updatedSLO.GetData()[0])
@@ -520,7 +520,7 @@ func resourceDatadogServiceLevelObjectiveDelete(d *schema.ResourceData, meta int
 		_, _, err = datadogClientV1.ServiceLevelObjectivesApi.DeleteSLO(authV1, d.Id())
 	}
 	if err != nil {
-		return utils.TranslateClientError(err, "error deleting service level objective")
+		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error deleting service level objective")
 	}
 	return nil
 

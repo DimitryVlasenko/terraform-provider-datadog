@@ -526,9 +526,9 @@ func resourceDatadogMonitorCustomizeDiff(diff *schema.ResourceDiff, meta interfa
 		_, httpresp, err := datadogClientV1.MonitorsApi.ValidateMonitor(authV1, *m)
 		if err != nil {
 			if httpresp != nil && (httpresp.StatusCode == 502 || httpresp.StatusCode == 504) {
-				return resource.RetryableError(utils.TranslateClientError(err, "error validating monitor, retrying"))
+				return resource.RetryableError(utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error validating monitor, retrying"))
 			}
-			return resource.NonRetryableError(utils.TranslateClientError(err, "error validating monitor"))
+			return resource.NonRetryableError(utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error validating monitor"))
 		}
 		return nil
 	})
@@ -556,7 +556,7 @@ func resourceDatadogMonitorCreate(d *schema.ResourceData, meta interface{}) erro
 	m, _ := buildMonitorStruct(d)
 	mCreated, _, err := datadogClientV1.MonitorsApi.CreateMonitor(authV1, *m)
 	if err != nil {
-		return utils.TranslateClientError(err, "error creating monitor")
+		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error creating monitor")
 	}
 	mCreatedID := strconv.FormatInt(mCreated.GetId(), 10)
 	d.SetId(mCreatedID)
@@ -738,10 +738,10 @@ func resourceDatadogMonitorRead(d *schema.ResourceData, meta interface{}) error 
 					d.SetId("")
 					return nil
 				} else if httpresp.StatusCode == 502 {
-					return resource.RetryableError(utils.TranslateClientError(err, "error getting monitor, retrying"))
+					return resource.RetryableError(utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error getting monitor, retrying"))
 				}
 			}
-			return resource.NonRetryableError(utils.TranslateClientError(err, "error getting monitor"))
+			return resource.NonRetryableError(utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error getting monitor"))
 		}
 		return nil
 	}); err != nil {
@@ -782,7 +782,7 @@ func resourceDatadogMonitorUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	monitorResp, _, err := datadogClientV1.MonitorsApi.UpdateMonitor(authV1, i, *m)
 	if err != nil {
-		return utils.TranslateClientError(err, "error updating monitor")
+		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error updating monitor")
 	}
 
 	if err := updateMonitorState(d, meta, &monitorResp); err != nil {
@@ -807,7 +807,7 @@ func resourceDatadogMonitorUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 		monitorResp, _, err = datadogClientV1.MonitorsApi.UpdateMonitor(authV1, i, *m)
 		if err != nil {
-			return utils.TranslateClientError(err, "error updating monitor")
+			return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error updating monitor")
 		}
 		if err := d.Set("silenced", map[string]int{}); err != nil {
 			return err
@@ -833,7 +833,7 @@ func resourceDatadogMonitorUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 		monitorResp, _, err = datadogClientV1.MonitorsApi.UpdateMonitor(authV1, i, *m)
 		if err != nil {
-			return utils.TranslateClientError(err, "error updating monitor")
+			return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error updating monitor")
 		}
 	}
 
@@ -858,7 +858,7 @@ func resourceDatadogMonitorDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err != nil {
-		return utils.TranslateClientError(err, "error deleting monitor")
+		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error deleting monitor")
 	}
 
 	return nil

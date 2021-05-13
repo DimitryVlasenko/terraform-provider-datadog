@@ -96,7 +96,7 @@ func resourceDatadogIntegrationGcpCreate(d *schema.ResourceData, meta interface{
 			Automute:                datadogV1.PtrBool(d.Get("automute").(bool)),
 		},
 	); err != nil {
-		return utils.TranslateClientError(err, "error creating GCP integration")
+		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error creating GCP integration")
 	}
 
 	d.SetId(projectID)
@@ -113,7 +113,7 @@ func resourceDatadogIntegrationGcpRead(d *schema.ResourceData, meta interface{})
 
 	integrations, _, err := datadogClientV1.GCPIntegrationApi.ListGCPIntegration(authV1)
 	if err != nil {
-		return utils.TranslateClientError(err, "error getting GCP integration")
+		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error getting GCP integration")
 	}
 	for _, integration := range integrations {
 		if integration.GetProjectId() == projectID {
@@ -141,7 +141,7 @@ func resourceDatadogIntegrationGcpUpdate(d *schema.ResourceData, meta interface{
 			Automute:    datadogV1.PtrBool(d.Get("automute").(bool)),
 		},
 	); err != nil {
-		return utils.TranslateClientError(err, "error updating GCP integration")
+		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error updating GCP integration")
 	}
 
 	return resourceDatadogIntegrationGcpRead(d, meta)
@@ -158,7 +158,7 @@ func resourceDatadogIntegrationGcpDelete(d *schema.ResourceData, meta interface{
 			ClientEmail: datadogV1.PtrString(d.Get("client_email").(string)),
 		},
 	); err != nil {
-		return utils.TranslateClientError(err, "error deleting GCP integration")
+		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error deleting GCP integration")
 	}
 
 	return nil

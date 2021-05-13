@@ -80,7 +80,7 @@ func dataSourceDatadogMonitorsRead(d *schema.ResourceData, meta interface{}) err
 
 	monitors, _, err := datadogClientV1.MonitorsApi.ListMonitors(authV1, *optionalParams)
 	if err != nil {
-		return utils.TranslateClientError(err, "error querying monitors")
+		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error querying monitors")
 	}
 	if len(monitors) == 0 {
 		return fmt.Errorf("your query returned no result, please try a less specific search criteria")

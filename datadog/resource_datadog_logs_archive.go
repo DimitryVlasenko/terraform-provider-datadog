@@ -144,7 +144,7 @@ func resourceDatadogLogsArchiveCreate(d *schema.ResourceData, meta interface{}) 
 	}
 	createdArchive, _, err := datadogClientV2.LogsArchivesApi.CreateLogsArchive(authV2, *ddArchive)
 	if err != nil {
-		return utils.TranslateClientError(err, "failed to create logs archive using Datadog API")
+		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "failed to create logs archive using Datadog API")
 	}
 	d.SetId(*createdArchive.GetData().Id)
 	return updateLogsArchiveState(d, &createdArchive)
@@ -197,7 +197,7 @@ func resourceDatadogLogsArchiveRead(d *schema.ResourceData, meta interface{}) er
 			d.SetId("")
 			return nil
 		}
-		return utils.TranslateClientError(err, "failed to get logs archive using Datadog API")
+		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "failed to get logs archive using Datadog API")
 	}
 	return updateLogsArchiveState(d, &ddArchive)
 }
@@ -213,7 +213,7 @@ func resourceDatadogLogsArchiveUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 	updatedArchive, _, err := datadogClientV2.LogsArchivesApi.UpdateLogsArchive(authV2, d.Id(), *ddArchive)
 	if err != nil {
-		return utils.TranslateClientError(err, "error updating logs archive")
+		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error updating logs archive")
 	}
 	return updateLogsArchiveState(d, &updatedArchive)
 }
@@ -228,7 +228,7 @@ func resourceDatadogLogsArchiveDelete(d *schema.ResourceData, meta interface{}) 
 		if httpresp != nil && httpresp.StatusCode == 404 {
 			return nil
 		}
-		return utils.TranslateClientError(err, "error deleting logs archive")
+		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error deleting logs archive")
 	}
 	return nil
 }

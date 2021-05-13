@@ -55,7 +55,7 @@ func resourceDatadogSyntheticsPrivateLocationCreate(d *schema.ResourceData, meta
 	createdSyntheticsPrivateLocationResponse, _, err := datadogClientV1.SyntheticsApi.CreatePrivateLocation(authV1, *syntheticsPrivateLocation)
 	if err != nil {
 		// Note that Id won't be set, so no state will be saved.
-		return utils.TranslateClientError(err, "error creating synthetics private location")
+		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error creating synthetics private location")
 	}
 
 	createdSyntheticsPrivateLocation := createdSyntheticsPrivateLocationResponse.GetPrivateLocation()
@@ -84,7 +84,7 @@ func resourceDatadogSyntheticsPrivateLocationRead(d *schema.ResourceData, meta i
 			d.SetId("")
 			return nil
 		}
-		return utils.TranslateClientError(err, "error getting synthetics private location")
+		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error getting synthetics private location")
 	}
 
 	return updateSyntheticsPrivateLocationLocalState(d, &syntheticsPrivateLocation)
@@ -98,7 +98,7 @@ func resourceDatadogSyntheticsPrivateLocationUpdate(d *schema.ResourceData, meta
 	syntheticsPrivateLocation := buildSyntheticsPrivateLocationStruct(d)
 	if _, _, err := datadogClientV1.SyntheticsApi.UpdatePrivateLocation(authV1, d.Id(), *syntheticsPrivateLocation); err != nil {
 		// If the Update callback returns with or without an error, the full state is saved.
-		return utils.TranslateClientError(err, "error updating synthetics private location")
+		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error updating synthetics private location")
 	}
 
 	// Return the read function to ensure the state is reflected in the terraform.state file
@@ -112,7 +112,7 @@ func resourceDatadogSyntheticsPrivateLocationDelete(d *schema.ResourceData, meta
 
 	if _, err := datadogClientV1.SyntheticsApi.DeletePrivateLocation(authV1, d.Id()); err != nil {
 		// The resource is assumed to still exist, and all prior state is preserved.
-		return utils.TranslateClientError(err, "error deleting synthetics private location")
+		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error deleting synthetics private location")
 	}
 
 	// The resource is assumed to be destroyed, and all state is removed.

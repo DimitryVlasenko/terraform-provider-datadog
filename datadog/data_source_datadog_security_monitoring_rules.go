@@ -112,7 +112,7 @@ func dataSourceDatadogSecurityMonitoringRulesRead(d *schema.ResourceData, meta i
 			})
 
 		if err != nil {
-			return utils.TranslateClientError(err, "error listing rules")
+			return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error listing rules")
 		}
 
 		for _, rule := range response.GetData() {
