@@ -704,7 +704,7 @@ func testAccCheckDatadogMonitorExists(accProvider *schema.Provider) resource.Tes
 		datadogClientV1 := providerConf.DatadogClientV1
 		authV1 := providerConf.AuthV1
 
-		if err := existsHelper(authV1, s, datadogClientV1); err != nil {
+		if err := existsHelper(authV1, s, datadogClientV1, providerConf); err != nil {
 			return err
 		}
 		return nil
@@ -1281,7 +1281,7 @@ func destroyHelper(ctx context.Context, s *terraform.State, datadogClientV1 *dat
 	return err
 }
 
-func existsHelper(ctx context.Context, s *terraform.State, datadogClientV1 *datadogV1.APIClient) error {
+func existsHelper(ctx context.Context, s *terraform.State, datadogClientV1 *datadogV1.APIClient, providerConf *datadog.ProviderConfiguration) error {
 	for _, r := range s.RootModule().Resources {
 		fmt.Println("lalalalalal")
 		fmt.Println(r.String())
@@ -1291,7 +1291,7 @@ func existsHelper(ctx context.Context, s *terraform.State, datadogClientV1 *data
 		i, _ := strconv.ParseInt(r.Primary.ID, 10, 64)
 		_, _, err := datadogClientV1.MonitorsApi.GetMonitor(ctx, i)
 		if err != nil {
-			return utils.TranslateClientError(err, "error retrieving monitor")
+			return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(), "error retrieving monitor")
 		}
 	}
 	return nil
