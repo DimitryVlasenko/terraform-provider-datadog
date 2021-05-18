@@ -111,10 +111,10 @@ func testAccCheckDatadogLogsMetricExists(accProvider *schema.Provider, resourceN
 
 		id := resourceID
 
-		_, _, err = datadogClient.LogsMetricsApi.GetLogsMetric(auth, id)
+		_, httpresp, err := datadogClient.LogsMetricsApi.GetLogsMetric(auth, id)
 
 		if err != nil {
-			return utils.TranslateClientError(err, httpresp.Request.URL.Host ,  "error checking logs_metric existence")
+			return utils.TranslateClientError(err, httpresp.Request.URL.Host, "error checking logs_metric existence")
 		}
 
 		return nil

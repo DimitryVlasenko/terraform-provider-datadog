@@ -78,7 +78,7 @@ func resourceDatadogMetricTagConfiguration() *schema.Resource {
 	}
 }
 
-func buildDatadogMetricTagConfiguration(d *schema.ResourceData, providerConf *ProviderConfiguration) (*datadogV2.MetricTagConfigurationCreateData, error) {
+func buildDatadogMetricTagConfiguration(d *schema.ResourceData) (*datadogV2.MetricTagConfigurationCreateData, error) {
 	result := datadogV2.NewMetricTagConfigurationCreateDataWithDefaults()
 	result.SetId(d.Get("metric_name").(string))
 
@@ -149,7 +149,7 @@ func resourceDatadogMetricTagConfigurationCreate(d *schema.ResourceData, meta in
 	datadogClient := providerConf.DatadogClientV2
 	auth := providerConf.AuthV2
 
-	resultMetricTagConfigurationData, err := buildDatadogMetricTagConfiguration(d, providerConf)
+	resultMetricTagConfigurationData, err := buildDatadogMetricTagConfiguration(d)
 	if err != nil {
 		return utils.TranslateClientError(err, "", "error building MetricTagConfiguration object")
 	}
