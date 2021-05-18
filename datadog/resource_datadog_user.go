@@ -181,7 +181,7 @@ func resourceDatadogUserCreate(d *schema.ResourceData, meta interface{}) error {
 	createResponse, httpresp, err := datadogClientV2.UsersApi.CreateUser(authV2, *userRequest)
 	if err != nil {
 		if httpresp == nil || httpresp.StatusCode != 409 {
-			return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error creating user")
+			return utils.TranslateClientError(err, httpresp.Request.URL.Host, "error creating user")
 		}
 		email := d.Get("email").(string)
 		log.Printf("[INFO] Updating existing Datadog user %s", email)
@@ -189,7 +189,7 @@ func resourceDatadogUserCreate(d *schema.ResourceData, meta interface{}) error {
 		listResponse, _, err := datadogClientV2.UsersApi.ListUsers(authV2,
 			*datadogV2.NewListUsersOptionalParameters().WithFilter(email))
 		if err != nil {
-			return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error searching user")
+			return utils.TranslateClientError(err, httpresp.Request.URL.Host, "error searching user")
 		}
 		responseData := listResponse.GetData()
 		if len(responseData) != 1 {
@@ -200,7 +200,7 @@ func resourceDatadogUserCreate(d *schema.ResourceData, meta interface{}) error {
 
 		updatedUser, _, err := datadogClientV2.UsersApi.UpdateUser(authV2, userID, *userRequest)
 		if err != nil {
-			return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error updating user")
+			return utils.TranslateClientError(err, httpresp.Request.URL.Host, "error updating user")
 		}
 		if err := updateUserStateV2(d, &updatedUser); err != nil {
 			return err
@@ -242,9 +242,9 @@ func sendUserInvitation(userID string, d *schema.ResourceData, meta interface{})
 	body := *datadogV2.NewUserInvitationsRequestWithDefaults()
 	body.SetData(userInvite)
 
-	res, _, err := datadogClientV2.UsersApi.SendInvitations(authV2, body)
+	res, httpResponse, err := datadogClientV2.UsersApi.SendInvitations(authV2, body)
 	if err != nil {
-		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error sending user invitation")
+		return utils.TranslateClientError(err, httpResponse.Request.URL.Host, "error sending user invitation")
 	}
 	if err := d.Set("user_invitation_id", res.GetData()[0].GetId()); err != nil {
 		return err
@@ -321,7 +321,7 @@ func resourceDatadogUserRead(d *schema.ResourceData, meta interface{}) error {
 				d.SetId("")
 				return nil
 			}
-			return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error getting user")
+			return utils.TranslateClientError(err, httpResponse.Request.URL.Host, "error getting user")
 		}
 		return updateUserStateV2(d, &userResponse)
 	}
@@ -347,10 +347,10 @@ func resourceDatadogUserUpdate(d *schema.ResourceData, meta interface{}) error {
 		email := d.Get("email").(string)
 		log.Printf("[INFO] Migrating existing Datadog user %s", email)
 		// Find user ID by listing user and filtering by email
-		listResponse, _, err := datadogClientV2.UsersApi.ListUsers(authV2,
+		listResponse, httpResponse, err := datadogClientV2.UsersApi.ListUsers(authV2,
 			*datadogV2.NewListUsersOptionalParameters().WithFilter(email))
 		if err != nil {
-			return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error searching user")
+			return utils.TranslateClientError(err, httpResponse.Request.URL.Host, "error searching user")
 		}
 		responseData := listResponse.GetData()
 		if len(responseData) != 1 {
@@ -376,9 +376,9 @@ func resourceDatadogUserUpdate(d *schema.ResourceData, meta interface{}) error {
 				userRelationData := datadogV2.NewRelationshipToUserDataWithDefaults()
 				userRelationData.SetId(d.Id())
 				userRelation.SetData(*userRelationData)
-				_, _, err := datadogClientV2.RolesApi.RemoveUserFromRole(authV2, role, *userRelation)
+				_, httpResponse, err := datadogClientV2.RolesApi.RemoveUserFromRole(authV2, role, *userRelation)
 				if err != nil {
-					return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error removing user from role")
+					return utils.TranslateClientError(err, httpResponse.Request.URL.Host, "error removing user from role")
 				}
 			}
 			for _, roleI := range rolesToAdd.List() {
@@ -387,17 +387,17 @@ func resourceDatadogUserUpdate(d *schema.ResourceData, meta interface{}) error {
 				roleRelationData := datadogV2.NewRelationshipToUserDataWithDefaults()
 				roleRelationData.SetId(d.Id())
 				roleRelation.SetData(*roleRelationData)
-				_, _, err := datadogClientV2.RolesApi.AddUserToRole(authV2, role, *roleRelation)
+				_, httpResponse, err := datadogClientV2.RolesApi.AddUserToRole(authV2, role, *roleRelation)
 				if err != nil {
-					return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error adding user to role")
+					return utils.TranslateClientError(err, httpResponse.Request.URL.Host, "error adding user to role")
 				}
 			}
 		}
 
 		userRequest := buildDatadogUserV2UpdateStruct(d, d.Id())
-		updatedUser, _, err := datadogClientV2.UsersApi.UpdateUser(authV2, d.Id(), *userRequest)
+		updatedUser, httpResponse, err := datadogClientV2.UsersApi.UpdateUser(authV2, d.Id(), *userRequest)
 		if err != nil {
-			return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error updating user")
+			return utils.TranslateClientError(err, httpResponse.Request.URL.Host, "error updating user")
 		}
 		// Update state once after we do the UpdateUser operation. At this point, the roles have already been changed
 		// so the updated list is avalaible in the update response.
@@ -409,7 +409,7 @@ func resourceDatadogUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	u.SetHandle(d.Id())
 
 	if err := client.UpdateUser(*u); err != nil {
-		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error updating user")
+		return utils.TranslateClientError(err, "", "error updating user")
 	}
 	// We don't have a response in v1, so keep relying on the read
 	return resourceDatadogUserRead(d, meta)
@@ -426,7 +426,7 @@ func resourceDatadogUserDelete(d *schema.ResourceData, meta interface{}) error {
 			if httpResponse != nil && httpResponse.StatusCode == 404 {
 				return nil
 			}
-			return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error disabling user")
+			return utils.TranslateClientError(err, httpResponse.Request.URL.Host, "error disabling user")
 		}
 	} else {
 		client := providerConf.CommunityClient
@@ -438,7 +438,7 @@ func resourceDatadogUserDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err := client.DeleteUser(d.Id()); err != nil {
-			return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error deleting user")
+			return utils.TranslateClientError(err, "", "error deleting user")
 		}
 	}
 

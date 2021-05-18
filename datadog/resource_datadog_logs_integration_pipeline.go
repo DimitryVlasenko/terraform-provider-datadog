@@ -50,7 +50,7 @@ func resourceDatadogLogsIntegrationPipelineRead(d *schema.ResourceData, meta int
 			d.SetId("")
 			return nil
 		}
-		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error getting logs integration pipeline")
+		return utils.TranslateClientError(err, httpresp.Request.URL.Host, "error getting logs integration pipeline")
 	}
 	if !ddPipeline.GetIsReadOnly() {
 		d.SetId("")
@@ -65,9 +65,9 @@ func resourceDatadogLogsIntegrationPipelineUpdate(d *schema.ResourceData, meta i
 	providerConf := meta.(*ProviderConfiguration)
 	datadogClientV1 := providerConf.DatadogClientV1
 	authV1 := providerConf.AuthV1
-	updatedPipeline, _, err := datadogClientV1.LogsPipelinesApi.UpdateLogsPipeline(authV1, d.Id(), ddPipeline)
+	updatedPipeline, httpResponse, err := datadogClientV1.LogsPipelinesApi.UpdateLogsPipeline(authV1, d.Id(), ddPipeline)
 	if err != nil {
-		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error updating logs integration pipeline")
+		return utils.TranslateClientError(err, httpResponse.Request.URL.Host, "error updating logs integration pipeline")
 	}
 	d.SetId(*updatedPipeline.Id)
 	return updateLogsIntegrationPipelineState(d, &updatedPipeline)

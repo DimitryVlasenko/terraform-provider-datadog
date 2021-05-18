@@ -3,6 +3,7 @@ package datadog
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"strconv"
 	"strings"
 
@@ -189,8 +190,8 @@ func resourceDatadogServiceLevelObjectiveCustomizeDiff(diff *schema.ResourceDiff
 	if attr, ok := diff.GetOk("monitor_ids"); ok {
 		for _, v := range attr.(*schema.Set).List() {
 			// Check that each monitor being added to the SLO exists
-			if _, _, err := datadogClientV1.MonitorsApi.GetMonitor(authV1, int64(v.(int))); err != nil {
-				return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error finding monitor to add to SLO")
+			if _, httpResponse, err := datadogClientV1.MonitorsApi.GetMonitor(authV1, int64(v.(int))); err != nil {
+				return utils.TranslateClientError(err, httpResponse.Request.URL.Host, "error finding monitor to add to SLO")
 			}
 		}
 	}
@@ -337,9 +338,9 @@ func resourceDatadogServiceLevelObjectiveCreate(d *schema.ResourceData, meta int
 	authV1 := providerConf.AuthV1
 
 	_, slor := buildServiceLevelObjectiveStructs(d)
-	sloResp, _, err := datadogClientV1.ServiceLevelObjectivesApi.CreateSLO(authV1, *slor)
+	sloResp, httpResponse, err := datadogClientV1.ServiceLevelObjectivesApi.CreateSLO(authV1, *slor)
 	if err != nil {
-		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error creating service level objective")
+		return utils.TranslateClientError(err, httpResponse.Request.URL.Host, "error creating service level objective")
 	}
 
 	slo := &sloResp.GetData()[0]
@@ -359,7 +360,7 @@ func resourceDatadogServiceLevelObjectiveRead(d *schema.ResourceData, meta inter
 			d.SetId("")
 			return nil
 		}
-		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error getting service level objective")
+		return utils.TranslateClientError(err, httpresp.Request.URL.Host, "error getting service level objective")
 	}
 
 	return updateSLOStateFromRead(d, sloResp.Data)
@@ -498,9 +499,9 @@ func resourceDatadogServiceLevelObjectiveUpdate(d *schema.ResourceData, meta int
 	authV1 := providerConf.AuthV1
 	slo, _ := buildServiceLevelObjectiveStructs(d)
 
-	updatedSLO, _, err := datadogClientV1.ServiceLevelObjectivesApi.UpdateSLO(authV1, d.Id(), *slo)
+	updatedSLO, httpResponse, err := datadogClientV1.ServiceLevelObjectivesApi.UpdateSLO(authV1, d.Id(), *slo)
 	if err != nil {
-		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error updating service level objective")
+		return utils.TranslateClientError(err, httpResponse.Request.URL.Host, "error updating service level objective")
 	}
 
 	return updateSLOState(d, &updatedSLO.GetData()[0])
@@ -512,15 +513,16 @@ func resourceDatadogServiceLevelObjectiveDelete(d *schema.ResourceData, meta int
 	authV1 := providerConf.AuthV1
 	var err error
 
+	var httpResponse *http.Response
 	if d.Get("force_delete").(bool) {
-		_, _, err = datadogClientV1.ServiceLevelObjectivesApi.DeleteSLO(authV1, d.Id(),
+		_, httpResponse, err = datadogClientV1.ServiceLevelObjectivesApi.DeleteSLO(authV1, d.Id(),
 			*datadogV1.NewDeleteSLOOptionalParameters().WithForce("true"),
 		)
 	} else {
-		_, _, err = datadogClientV1.ServiceLevelObjectivesApi.DeleteSLO(authV1, d.Id())
+		_, httpResponse, err = datadogClientV1.ServiceLevelObjectivesApi.DeleteSLO(authV1, d.Id())
 	}
 	if err != nil {
-		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error deleting service level objective")
+		return utils.TranslateClientError(err, httpResponse.Request.URL.Host, "error deleting service level objective")
 	}
 	return nil
 

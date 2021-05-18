@@ -170,9 +170,9 @@ func resourceDatadogSecurityMonitoringRuleCreate(d *schema.ResourceData, meta in
 	if err != nil {
 		return err
 	}
-	response, _, err := datadogClientV2.SecurityMonitoringApi.CreateSecurityMonitoringRule(authV2, ruleCreate)
+	response, httpResponse, err := datadogClientV2.SecurityMonitoringApi.CreateSecurityMonitoringRule(authV2, ruleCreate)
 	if err != nil {
-		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error creating security monitoring rule")
+		return utils.TranslateClientError(err, httpResponse.Request.URL.Host, "error creating security monitoring rule")
 	}
 
 	d.SetId(response.GetId())
@@ -398,9 +398,9 @@ func resourceDatadogSecurityMonitoringRuleUpdate(d *schema.ResourceData, meta in
 	authV2 := providerConf.AuthV2
 
 	ruleUpdate := buildUpdatePayload(d)
-	response, _, err := datadogClientV2.SecurityMonitoringApi.UpdateSecurityMonitoringRule(authV2, d.Id(), ruleUpdate)
+	response, httpResponse, err := datadogClientV2.SecurityMonitoringApi.UpdateSecurityMonitoringRule(authV2, d.Id(), ruleUpdate)
 	if err != nil {
-		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error updating security monitoring rule")
+		return utils.TranslateClientError(err, httpResponse.Request.URL.Host, "error updating security monitoring rule")
 	}
 
 	updateResourceDataFromResponse(d, response)
@@ -535,8 +535,8 @@ func resourceDatadogSecurityMonitoringRuleDelete(d *schema.ResourceData, meta in
 	datadogClientV2 := providerConf.DatadogClientV2
 	authV2 := providerConf.AuthV2
 
-	if _, err := datadogClientV2.SecurityMonitoringApi.DeleteSecurityMonitoringRule(authV2, d.Id()); err != nil {
-		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error deleting security monitoring rule")
+	if httpResponse, err := datadogClientV2.SecurityMonitoringApi.DeleteSecurityMonitoringRule(authV2, d.Id()); err != nil {
+		return utils.TranslateClientError(err, httpResponse.Request.URL.Host, "error deleting security monitoring rule")
 	}
 
 	return nil

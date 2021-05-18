@@ -94,9 +94,9 @@ func resourceDatadogDashboardJSONCreate(d *schema.ResourceData, meta interface{}
 
 	dashboard := d.Get("dashboard").(string)
 
-	respByte, _, err := utils.SendRequest(authV1, datadogClientV1, "POST", path, &dashboard)
+	respByte, httpresp, err := utils.SendRequest(authV1, datadogClientV1, "POST", path, &dashboard)
 	if err != nil {
-		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error creating resource")
+		return utils.TranslateClientError(err, httpresp.Request.URL.Host, "error creating resource")
 	}
 
 	respMap, err := utils.ConvertResponseByteToMap(respByte)
@@ -121,9 +121,9 @@ func resourceDatadogDashboardJSONUpdate(d *schema.ResourceData, meta interface{}
 	dashboard := d.Get("dashboard")
 	id := d.Id()
 
-	respByte, _, err := utils.SendRequest(authV1, datadogClientV1, "PUT", path+"/"+id, &dashboard)
+	respByte, httpresp, err := utils.SendRequest(authV1, datadogClientV1, "PUT", path+"/"+id, &dashboard)
 	if err != nil {
-		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error updating dashboard")
+		return utils.TranslateClientError(err, httpresp.Request.URL.Host, "error updating dashboard")
 	}
 
 	respMap, err := utils.ConvertResponseByteToMap(respByte)
@@ -141,9 +141,9 @@ func resourceDatadogDashboardJSONDelete(d *schema.ResourceData, meta interface{}
 
 	id := d.Id()
 
-	_, _, err := utils.SendRequest(authV1, datadogClientV1, "DELETE", path+"/"+id, nil)
+	_, httpresp, err := utils.SendRequest(authV1, datadogClientV1, "DELETE", path+"/"+id, nil)
 	if err != nil {
-		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error deleting dashboard")
+		return utils.TranslateClientError(err, httpresp.Request.URL.Host, "error deleting dashboard")
 	}
 
 	return nil

@@ -38,7 +38,7 @@ func TranslateClientError(err error, apiURL, msg string) error {
 		return fmt.Errorf(msg+" from %s (url.Error): %s", apiURL, errURL)
 	}
 
-	return fmt.Errorf(msg+" from %s: %s", apiURL, err.Error())
+	return fmt.Errorf(msg+": %s", err.Error())
 }
 
 // GetUserAgent augments the default user agent with provider details

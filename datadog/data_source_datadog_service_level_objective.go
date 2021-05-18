@@ -69,9 +69,9 @@ func dataSourceDatadogServiceLevelObjectiveRead(d *schema.ResourceData, meta int
 		reqParams.WithMetricsQuery(v.(string))
 	}
 
-	slosResp, _, err := datadogClientV1.ServiceLevelObjectivesApi.ListSLOs(authV1, *reqParams)
+	slosResp, httpresp, err := datadogClientV1.ServiceLevelObjectivesApi.ListSLOs(authV1, *reqParams)
 	if err != nil {
-		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error querying service level objectives")
+		return utils.TranslateClientError(err, httpresp.Request.URL.Host, "error querying service level objectives")
 	}
 	if len(slosResp.GetData()) > 1 {
 		return fmt.Errorf("your query returned more than one result, please try a more specific search criteria")

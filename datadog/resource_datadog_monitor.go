@@ -526,9 +526,9 @@ func resourceDatadogMonitorCustomizeDiff(diff *schema.ResourceDiff, meta interfa
 		_, httpresp, err := datadogClientV1.MonitorsApi.ValidateMonitor(authV1, *m)
 		if err != nil {
 			if httpresp != nil && (httpresp.StatusCode == 502 || httpresp.StatusCode == 504) {
-				return resource.RetryableError(utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error validating monitor, retrying"))
+				return resource.RetryableError(utils.TranslateClientError(err, httpresp.Request.URL.Host, "error validating monitor, retrying"))
 			}
-			return resource.NonRetryableError(utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error validating monitor"))
+			return resource.NonRetryableError(utils.TranslateClientError(err, httpresp.Request.URL.Host, "error validating monitor"))
 		}
 		return nil
 	})
@@ -554,9 +554,9 @@ func resourceDatadogMonitorCreate(d *schema.ResourceData, meta interface{}) erro
 	authV1 := providerConf.AuthV1
 
 	m, _ := buildMonitorStruct(d)
-	mCreated, _, err := datadogClientV1.MonitorsApi.CreateMonitor(authV1, *m)
+	mCreated, httpResponse, err := datadogClientV1.MonitorsApi.CreateMonitor(authV1, *m)
 	if err != nil {
-		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error creating monitor")
+		return utils.TranslateClientError(err, httpResponse.Request.URL.Host, "error creating monitor")
 	}
 	mCreatedID := strconv.FormatInt(mCreated.GetId(), 10)
 	d.SetId(mCreatedID)
@@ -738,10 +738,10 @@ func resourceDatadogMonitorRead(d *schema.ResourceData, meta interface{}) error 
 					d.SetId("")
 					return nil
 				} else if httpresp.StatusCode == 502 {
-					return resource.RetryableError(utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error getting monitor, retrying"))
+					return resource.RetryableError(utils.TranslateClientError(err, httpresp.Request.URL.Host, "error getting monitor, retrying"))
 				}
 			}
-			return resource.NonRetryableError(utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error getting monitor"))
+			return resource.NonRetryableError(utils.TranslateClientError(err, httpresp.Request.URL.Host, "error getting monitor"))
 		}
 		return nil
 	}); err != nil {
@@ -780,9 +780,9 @@ func resourceDatadogMonitorUpdate(d *schema.ResourceData, meta interface{}) erro
 		silenced = true
 	}
 
-	monitorResp, _, err := datadogClientV1.MonitorsApi.UpdateMonitor(authV1, i, *m)
+	monitorResp, httpResponse, err := datadogClientV1.MonitorsApi.UpdateMonitor(authV1, i, *m)
 	if err != nil {
-		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error updating monitor")
+		return utils.TranslateClientError(err, httpResponse.Request.URL.Host, "error updating monitor")
 	}
 
 	if err := updateMonitorState(d, meta, &monitorResp); err != nil {
@@ -805,9 +805,9 @@ func resourceDatadogMonitorUpdate(d *schema.ResourceData, meta interface{}) erro
 			// end timestamp to time.Now().Unix()
 			mSilenced[k] = providerConf.Now().Unix()
 		}
-		monitorResp, _, err = datadogClientV1.MonitorsApi.UpdateMonitor(authV1, i, *m)
+		monitorResp, httpResponse, err = datadogClientV1.MonitorsApi.UpdateMonitor(authV1, i, *m)
 		if err != nil {
-			return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error updating monitor")
+			return utils.TranslateClientError(err, httpResponse.Request.URL.Host, "error updating monitor")
 		}
 		if err := d.Set("silenced", map[string]int{}); err != nil {
 			return err
@@ -831,9 +831,9 @@ func resourceDatadogMonitorUpdate(d *schema.ResourceData, meta interface{}) erro
 				delete(silencedList, scope)
 			}
 		}
-		monitorResp, _, err = datadogClientV1.MonitorsApi.UpdateMonitor(authV1, i, *m)
+		monitorResp, httpResponse, err = datadogClientV1.MonitorsApi.UpdateMonitor(authV1, i, *m)
 		if err != nil {
-			return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error updating monitor")
+			return utils.TranslateClientError(err, httpResponse.Request.URL.Host, "error updating monitor")
 		}
 	}
 
@@ -850,15 +850,17 @@ func resourceDatadogMonitorDelete(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
+	var httpResponse *http.Response
+
 	if d.Get("force_delete").(bool) {
-		_, _, err = datadogClientV1.MonitorsApi.DeleteMonitor(authV1, i,
+		_, httpResponse, err = datadogClientV1.MonitorsApi.DeleteMonitor(authV1, i,
 			*datadogV1.NewDeleteMonitorOptionalParameters().WithForce("true"))
 	} else {
-		_, _, err = datadogClientV1.MonitorsApi.DeleteMonitor(authV1, i)
+		_, httpResponse, err = datadogClientV1.MonitorsApi.DeleteMonitor(authV1, i)
 	}
 
 	if err != nil {
-		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error deleting monitor")
+		return utils.TranslateClientError(err, httpResponse.Request.URL.Host, "error deleting monitor")
 	}
 
 	return nil

@@ -256,9 +256,9 @@ func dataSourceDatadogMonitorRead(d *schema.ResourceData, meta interface{}) erro
 		optionalParams = optionalParams.WithMonitorTags(strings.Join(expandStringList(v.([]interface{})), ","))
 	}
 
-	monitors, _, err := datadogClientV1.MonitorsApi.ListMonitors(authV1, *optionalParams)
+	monitors, httpresp, err := datadogClientV1.MonitorsApi.ListMonitors(authV1, *optionalParams)
 	if err != nil {
-		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error querying monitors")
+		return utils.TranslateClientError(err, httpresp.Request.URL.Host, "error querying monitors")
 	}
 	if len(monitors) > 1 {
 		return fmt.Errorf("your query returned more than one result, please try a more specific search criteria")

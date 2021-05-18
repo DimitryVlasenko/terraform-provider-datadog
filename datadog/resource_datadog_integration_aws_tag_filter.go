@@ -65,8 +65,8 @@ func resourceDatadogIntegrationAwsTagFilterCreate(d *schema.ResourceData, meta i
 	authV1 := providerConf.AuthV1
 
 	req := buildDatadogIntegrationAwsTagFilter(d)
-	if _, _, err := datadogClientV1.AWSIntegrationApi.CreateAWSTagFilter(authV1, *req); err != nil {
-		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error creating aws tag filter")
+	if _, httpresp, err := datadogClientV1.AWSIntegrationApi.CreateAWSTagFilter(authV1, *req); err != nil {
+		return utils.TranslateClientError(err, httpresp.Request.URL.Host, "error creating aws tag filter")
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", req.GetAccountId(), req.GetNamespace()))
@@ -79,8 +79,8 @@ func resourceDatadogIntegrationAwsTagFilterUpdate(d *schema.ResourceData, meta i
 	authV1 := providerConf.AuthV1
 
 	req := buildDatadogIntegrationAwsTagFilter(d)
-	if _, _, err := datadogClientV1.AWSIntegrationApi.CreateAWSTagFilter(authV1, *req); err != nil {
-		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error updating aws tag filter")
+	if _, httpresp, err := datadogClientV1.AWSIntegrationApi.CreateAWSTagFilter(authV1, *req); err != nil {
+		return utils.TranslateClientError(err, httpresp.Request.URL.Host, "error updating aws tag filter")
 	}
 
 	return resourceDatadogIntegrationAwsTagFilterRead(d, meta)
@@ -97,9 +97,9 @@ func resourceDatadogIntegrationAwsTagFilterRead(d *schema.ResourceData, meta int
 	}
 	namespace := datadogV1.AWSNamespace(tfNamespace)
 
-	resp, _, err := datadogClientV1.AWSIntegrationApi.ListAWSTagFilters(authV1, accountID)
+	resp, httpresp, err := datadogClientV1.AWSIntegrationApi.ListAWSTagFilters(authV1, accountID)
 	if err != nil {
-		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error listing aws tag filter")
+		return utils.TranslateClientError(err, httpresp.Request.URL.Host, "error listing aws tag filter")
 	}
 
 	for _, ns := range resp.GetFilters() {
@@ -132,8 +132,8 @@ func resourceDatadogIntegrationAwsTagFilterDelete(d *schema.ResourceData, meta i
 		Namespace: &namespace,
 	}
 
-	if _, _, err := datadogClientV1.AWSIntegrationApi.DeleteAWSTagFilter(authV1, deleteRequest); err != nil {
-		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error deleting aws tag filter")
+	if _, httpresp, err := datadogClientV1.AWSIntegrationApi.DeleteAWSTagFilter(authV1, deleteRequest); err != nil {
+		return utils.TranslateClientError(err, httpresp.Request.URL.Host, "error deleting aws tag filter")
 	}
 
 	return nil

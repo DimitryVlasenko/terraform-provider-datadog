@@ -119,7 +119,7 @@ func resourceDatadogLogsIndexRead(d *schema.ResourceData, meta interface{}) erro
 			d.SetId("")
 			return nil
 		}
-		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error getting logs index")
+		return utils.TranslateClientError(err, httpresp.Request.URL.Host, "error getting logs index")
 	}
 	return updateLogsIndexState(d, &ddIndex)
 }
@@ -134,12 +134,12 @@ func resourceDatadogLogsIndexUpdate(d *schema.ResourceData, meta interface{}) er
 	authV1 := providerConf.AuthV1
 
 	tfName := d.Get("name").(string)
-	updatedIndex, _, err := datadogClientV1.LogsIndexesApi.UpdateLogsIndex(authV1, tfName, *ddIndex)
+	updatedIndex, httpResponse, err := datadogClientV1.LogsIndexesApi.UpdateLogsIndex(authV1, tfName, *ddIndex)
 	if err != nil {
 		if strings.Contains(err.Error(), "404 Not Found") {
 			return fmt.Errorf("logs index creation is not allowed, index_name: %s", tfName)
 		}
-		return utils.TranslateClientError(err, providerConf.CommunityClient.GetBaseUrl(),  "error updating logs index")
+		return utils.TranslateClientError(err, httpResponse.Request.URL.Host, "error updating logs index")
 	}
 	d.SetId(tfName)
 	return updateLogsIndexState(d, &updatedIndex)
