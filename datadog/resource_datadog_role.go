@@ -3,6 +3,7 @@ package datadog
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"reflect"
 
 	"github.com/terraform-providers/terraform-provider-datadog/datadog/internal/utils"
@@ -230,13 +231,18 @@ func resourceDatadogRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 		newPerms := newPermsI.(*schema.Set)
 		permsToRemove := oldPerms.Difference(newPerms)
 		permsToAdd := newPerms.Difference(oldPerms)
+		var (
+			permsResponse datadog.PermissionsResponse
+			err           error
+			httpResponse  *http.Response
+		)
 		for _, permI := range permsToRemove.List() {
 			perm := permI.(map[string]interface{})
 			permRelation := datadog.NewRelationshipToPermissionWithDefaults()
 			permRelationData := datadog.NewRelationshipToPermissionDataWithDefaults()
 			permRelationData.SetId(perm["id"].(string))
 			permRelation.SetData(*permRelationData)
-			permsResponse, httpResponse, err := client.RolesApi.RemovePermissionFromRole(auth, d.Id(), *permRelation)
+			permsResponse, httpResponse, err = client.RolesApi.RemovePermissionFromRole(auth, d.Id(), *permRelation)
 			if err != nil {
 				return utils.TranslateClientError(err, httpResponse.Request.URL.Host, "error removing permission from role")
 			}
@@ -248,7 +254,7 @@ func resourceDatadogRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 			permRelationData := datadog.NewRelationshipToPermissionDataWithDefaults()
 			permRelationData.SetId(perm["id"].(string))
 			permRelation.SetData(*permRelationData)
-			permsResponse, httpResponse, err := client.RolesApi.AddPermissionToRole(auth, d.Id(), *permRelation)
+			permsResponse, httpResponse, err = client.RolesApi.AddPermissionToRole(auth, d.Id(), *permRelation)
 			if err != nil {
 				return utils.TranslateClientError(err, httpResponse.Request.URL.Host, "error adding permission to role")
 			}
