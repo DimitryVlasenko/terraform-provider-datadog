@@ -114,7 +114,6 @@ func validatePermissionsUnrestricted(value interface{}, meta interface{}) error 
 func resourceDatadogRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*ProviderConfiguration).DatadogClientV2
 	auth := meta.(*ProviderConfiguration).AuthV2
-	providerConf := meta.(*ProviderConfiguration)
 
 	roleReq := buildRoleCreateRequest(d)
 	resp, httpResponse, err := client.RolesApi.CreateRole(auth, roleReq)
@@ -124,10 +123,10 @@ func resourceDatadogRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	roleData := resp.GetData()
 	d.SetId(roleData.GetId())
 
-	return updateRoleState(auth, d, roleData.Attributes, roleData.Relationships, client, providerConf)
+	return updateRoleState(auth, d, roleData.Attributes, roleData.Relationships, client)
 }
 
-func updateRoleState(ctx context.Context, d *schema.ResourceData, roleAttrsI interface{}, roleRelations *datadog.RoleResponseRelationships, client *datadog.APIClient, providerConf *ProviderConfiguration) error {
+func updateRoleState(ctx context.Context, d *schema.ResourceData, roleAttrsI interface{}, roleRelations *datadog.RoleResponseRelationships, client *datadog.APIClient) error {
 	type namer interface {
 		GetName() string
 	}
@@ -150,10 +149,10 @@ func updateRoleState(ctx context.Context, d *schema.ResourceData, roleAttrsI int
 	}
 
 	rolePerms := roleRelations.GetPermissions()
-	return updateRolePermissionsState(ctx, d, rolePerms.GetData(), client, providerConf)
+	return updateRolePermissionsState(ctx, d, rolePerms.GetData(), client)
 }
 
-func updateRolePermissionsState(ctx context.Context, d *schema.ResourceData, rolePermsI interface{}, client *datadog.APIClient, providerConf *ProviderConfiguration) error {
+func updateRolePermissionsState(ctx context.Context, d *schema.ResourceData, rolePermsI interface{}, client *datadog.APIClient) error {
 
 	// Get a list of all valid permissions, to ignore restricted perms
 	permsIDToName, err := getValidPermissions(ctx, client)
@@ -196,7 +195,6 @@ func appendPerm(perms []map[string]string, permID string, permsIDToName map[stri
 func resourceDatadogRoleRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*ProviderConfiguration).DatadogClientV2
 	auth := meta.(*ProviderConfiguration).AuthV2
-	providerConf := meta.(*ProviderConfiguration)
 
 	// Get the role
 	resp, httpresp, err := client.RolesApi.GetRole(auth, d.Id())
@@ -208,13 +206,12 @@ func resourceDatadogRoleRead(d *schema.ResourceData, meta interface{}) error {
 		return utils.TranslateClientError(err, httpresp.Request.URL.Host, "error getting role")
 	}
 	roleData := resp.GetData()
-	return updateRoleState(auth, d, roleData.Attributes, roleData.Relationships, client, providerConf)
+	return updateRoleState(auth, d, roleData.Attributes, roleData.Relationships, client)
 }
 
 func resourceDatadogRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*ProviderConfiguration).DatadogClientV2
 	auth := meta.(*ProviderConfiguration).AuthV2
-	providerConf := meta.(*ProviderConfiguration)
 
 	if d.HasChange("name") {
 		roleReq := buildRoleUpdateRequest(d)
@@ -223,7 +220,7 @@ func resourceDatadogRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 			return utils.TranslateClientError(err, httpResponse.Request.URL.Host, "error updating role")
 		}
 		roleData := resp.GetData()
-		if err := updateRoleState(auth, d, roleData.Attributes, roleData.Relationships, client, providerConf); err != nil {
+		if err := updateRoleState(auth, d, roleData.Attributes, roleData.Relationships, client); err != nil {
 			return err
 		}
 	}
@@ -233,14 +230,13 @@ func resourceDatadogRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 		newPerms := newPermsI.(*schema.Set)
 		permsToRemove := oldPerms.Difference(newPerms)
 		permsToAdd := newPerms.Difference(oldPerms)
-		var permsResponse datadog.PermissionsResponse
 		for _, permI := range permsToRemove.List() {
 			perm := permI.(map[string]interface{})
 			permRelation := datadog.NewRelationshipToPermissionWithDefaults()
 			permRelationData := datadog.NewRelationshipToPermissionDataWithDefaults()
 			permRelationData.SetId(perm["id"].(string))
 			permRelation.SetData(*permRelationData)
-			_, httpResponse, err := client.RolesApi.RemovePermissionFromRole(auth, d.Id(), *permRelation)
+			permsResponse, httpResponse, err := client.RolesApi.RemovePermissionFromRole(auth, d.Id(), *permRelation)
 			if err != nil {
 				return utils.TranslateClientError(err, httpResponse.Request.URL.Host, "error removing permission from role")
 			}
@@ -252,13 +248,13 @@ func resourceDatadogRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 			permRelationData := datadog.NewRelationshipToPermissionDataWithDefaults()
 			permRelationData.SetId(perm["id"].(string))
 			permRelation.SetData(*permRelationData)
-			_, httpResponse, err := client.RolesApi.AddPermissionToRole(auth, d.Id(), *permRelation)
+			permsResponse, httpResponse, err := client.RolesApi.AddPermissionToRole(auth, d.Id(), *permRelation)
 			if err != nil {
 				return utils.TranslateClientError(err, httpResponse.Request.URL.Host, "error adding permission to role")
 			}
 		}
 		// Only need to update once all the permissions have been added/revoked, with the last call response
-		if err := updateRolePermissionsState(auth, d, permsResponse.GetData(), client, providerConf); err != nil {
+		if err := updateRolePermissionsState(auth, d, permsResponse.GetData(), client); err != nil {
 			return err
 		}
 	}
